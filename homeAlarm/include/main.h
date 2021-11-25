@@ -5,5 +5,7 @@
 
 #define BAUD_RATE       115200
 
+extern void readDigitalVal() ;
+extern void initWifi() ;
 
 #endif  /* MAIN_H_ */
