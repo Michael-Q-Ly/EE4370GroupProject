@@ -9,6 +9,15 @@ gpio_num_t const LED_PIN    = GPIO_NUM_13 ;
 /* Constants */
 int const READ_DELAY        = 100 ;
 
+typedef enum {
+    REED_CLOSED = LOW,
+    REED_OPEN   = HIGH
+} Reed_State_t ;
+
+typedef enum {
+    LED_ON      = HIGH ,
+    LED_OFF     = LOW
+} LED_State_t ;
 
 void readDigitalVal() ;
 
