@@ -5,7 +5,8 @@
 
 #define BAUD_RATE       115200
 
-extern void readDigitalVal() ;
 extern void initWifi() ;
+extern void checkReedState() ;
+extern void IRAM_ATTR ISR_buttonPressed(void) ;
 
 #endif  /* MAIN_H_ */
