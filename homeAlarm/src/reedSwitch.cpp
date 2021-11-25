@@ -4,11 +4,7 @@
 /*
  * Reads the digital pin of the reed switch and turns an LED on if it is open
  */
-<<<<<<< HEAD
 void checkReedState() {
-=======
-void readDigitalVal() {
->>>>>>> 9b4588aedf1cf534245f0b4a4fd5171aa2e767c3
     Reed_State_t    reedState ;
     LED_State_t     ledState ;
 
