@@ -1,9 +1,15 @@
-#include <Arduino.h>
+#include "main.h"
+#include "reedSwitch.h"
+
+extern void readDigitalVal() ;
 
 void setup() {
-  // put your setup code here, to run once:
+    Serial.begin(BAUD_RATE) ;
+
+    pinMode(REED_PIN, INPUT) ;
+    pinMode(LED_PIN, OUTPUT) ;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+    readDigitalVal() ;
 }
