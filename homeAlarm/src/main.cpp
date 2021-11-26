@@ -30,7 +30,6 @@ void loop() {
             // Enable wifi flag
             wifiEnable = true ;
             // Enable reedSwitch checking
-            checkReedState() ;
         }
         else {
             // Deep sleep mode
@@ -38,8 +37,12 @@ void loop() {
         if (wifiEnable) {
             initWifi() ;
             wifiEnable = false ;
-        }
+        }  
     }
+    while ( (button.totalInterruptCounter) && (button.totalInterruptCounter % 2) )
+        checkReedState() ;
+
+
     #ifdef later
     // Figure out a way to enable wifi once and only o
     // Make it so that this is a wakeup from sleep
