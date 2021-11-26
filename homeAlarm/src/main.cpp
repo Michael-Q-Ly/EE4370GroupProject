@@ -45,6 +45,7 @@ void loop() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* FUNCTION PROTOTYPES */
 
+/* Reads the digital pin of the reed switch and turns an LED on if it is open */
 void checkReedState() {
     Reed_State_t    reedState ;
     LED_State_t     ledState ;
@@ -64,6 +65,7 @@ void checkReedState() {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/* Interrupt service request for button */
 void IRAM_ATTR ISR_buttonPressed(void) {
     portENTER_CRITICAL_ISR(&button.mux) ;
     button.interruptCounter++ ;
