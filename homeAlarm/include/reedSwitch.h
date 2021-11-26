@@ -19,6 +19,4 @@ typedef enum {
     LED_OFF     = LOW
 } LED_State_t ;
 
-void readDigitalVal() ;
-
 #endif  /* REED_SWITCH_H_ */
