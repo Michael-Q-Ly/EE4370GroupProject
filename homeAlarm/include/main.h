@@ -19,6 +19,7 @@ int const READ_DELAY        = 100 ;
 char const *SSID            = "myNetworkName" ;
 char const *PASS            = "myNetworkPassword" ;
 // uint8_t const   WEB_PORT    = 80 ;
+int const TRIP_DELAY        = 5000 ;
 
 /* Flags */
 
@@ -52,15 +53,33 @@ typedef struct {
     uint32_t                    totalInterruptCounter ;
 } Button_t ;
 
+typedef struct {
+    uint16_t const              DEBOUNCE    = 500 ;
+    uint8_t volatile            count ;
+    portMUX_TYPE                mux         = portMUX_INITIALIZER_UNLOCKED ;
+    uint32_t volatile           interruptCounter ;
+    uint32_t                    totalInterruptCounter ;
+} Reed_t ;
+
 /* Typedef Variables */
 Button_t                        button ;
+Reed_t                          reed ;
+LED_State_t                     ledState ;
+Reed_State_t                    reedState ;
+esp_sleep_wakeup_cause_t        wakeup_reason ;
+
 
 // WiFi
 void initWifi(void) ;
 // Reed Switch
 void checkReedState(void) ;
-// Button
+// Interrupt handlers
 void IRAM_ATTR ISR_buttonPressed(void) ;
-void checkButtonPress(void) ;
+void IRAM_ATTR ISR_reedOpen(void) ;
+// Sleep modes
+void deepSleep(void) ;
+void lightSleep(void) ;
+
+// void checkButtonPress(void) ;
 
 #endif  /* MAIN_H_ */
