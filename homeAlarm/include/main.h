@@ -16,9 +16,14 @@ bool wifi_enabled ;
 /* Constants */
 
 int const READ_DELAY        = 100 ;
-char const *SSID            = "Misnomer" ;
-char const *PASS            = "3mb3d3dSystems!" ;
+char const *SSID            = "myNetworkName" ;
+char const *PASS            = "myNetworkPassword" ;
 // uint8_t const   WEB_PORT    = 80 ;
+
+/* Flags */
+
+bool wifiEnable ;
+
 
 /* Enumerations */
 
@@ -51,9 +56,9 @@ typedef struct {
 Button_t                        button ;
 
 // WiFi
-void initWifi() ;
+void initWifi(void) ;
 // Reed Switch
-void checkReedState() ;
+void checkReedState(void) ;
 // Button
 void IRAM_ATTR ISR_buttonPressed(void) ;
 void checkButtonPress(void) ;
