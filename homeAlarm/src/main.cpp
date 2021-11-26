@@ -65,7 +65,10 @@ void checkReedState() {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+<<<<<<< HEAD
 /* Interrupt service request for button */
+=======
+>>>>>>> 9c44b40c0c4c726d657815b01356ac02389eecdb
 void IRAM_ATTR ISR_buttonPressed(void) {
     portENTER_CRITICAL_ISR(&button.mux) ;
     button.interruptCounter++ ;
