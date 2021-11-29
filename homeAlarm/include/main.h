@@ -17,14 +17,17 @@ bool wifi_enabled ;
 /* -------------------------------------------- Constants -------------------------------------------- */
 
 uint8_t const READ_DELAY        = 100 ;
-char const *SSID                = "HuisATT 2.4GHz" ;
-char const *PASS                = "coffeesluts" ;
-// char const *SSID            = "myNetworkName" ;
-// char const *PASS            = "myNetworkPassword" ;
+char const *SSID            = "myNetworkName" ;
+char const *PASS            = "myNetworkPassword" ;
 // uint8_t const   WEB_PORT    = 80 ;
 uint8_t const MAX_WIFI_ATTEMPTS = 20 ;
 
-/* Enumerations */
+/* -------------------------------------------- Flags -------------------------------------------- */
+// bool alarmArmed ;
+RTC_DATA_ATTR bool volatile alarmArmed  = false;
+RTC_DATA_ATTR bool volatile doorClosed  = true ;
+
+/* -------------------------------------------- Enumerations -------------------------------------------- */
 
 typedef enum {
     REED_CLOSED = LOW,
@@ -66,20 +69,29 @@ LED_State_t                     ledState ;
 Reed_State_t                    reedState ;
 esp_sleep_wakeup_cause_t        wakeup_reason ;
 
-
+/* -------------------------------------------- Global Variables -------------------------------------------- */
+portMUX_TYPE                buttonMUX                     = portMUX_INITIALIZER_UNLOCKED ;
+uint32_t volatile           buttonInterruptCounter ;
+RTC_DATA_ATTR uint32_t      buttonTotalInterruptCounter ;
 
 /* -------------------------------------------- Function Prototypes -------------------------------------------- */
-// WiFi
-void init_Wifi(void) ;
-// Reed Switch
-// void checkReedState(void) ;
-// Interrupt handlers
-// void IRAM_ATTR ISR_buttonPressed(void) ;
+
+void init_Wifi(void) ;                                                  // WiFi
+
+// void checkReedState(void) ;                                          // Reed Switch
+
+void IRAM_ATTR ISR_buttonPressed(void) ;                                // Interrupt handlers
 // void IRAM_ATTR ISR_reedOpen(void) ;
-// Sleep modes
-void light_sleep_button(void) ;
-void light_sleep_switch(void) ;
-void deep_sleep(void) ;
+
+void deep_sleep_reed_closed(void) ;                                     // Sleep modes
+void deep_sleep_reed_open(void) ;
+void deep_sleep_button(void) ;
+#ifdef useLightsleep
+    void light_sleep_button(void) ;
+    void light_sleep_door_open(void) ;
+    void light_sleep_door_closed(void) ;
+#endif  /* useLightSleep */
+
 
 // void checkButtonPress(void) ;
 
