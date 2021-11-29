@@ -19,16 +19,24 @@ void loop() {
     Serial.printf("Door state is %d\n", doorClosed) ;
     delay(100) ;
 
+    if (wifiEnabled) {
+        Serial.printf("Wifi on\n") ;
+        init_Wifi() ;
+        wifiEnabled = false ;
+    }
+
     if (alarmArmed && doorClosed) {
         Serial.println("Alarm is armed. Going to deep sleep mode. Wake by opening door.\n") ;
         delay(100) ;
-        doorClosed = false ;
+        doorClosed  = false ;
+        wifiEnabled = true ;
         deep_sleep_reed_open() ;
     }
     else if (alarmArmed && !doorClosed) {
         Serial.println("Alarm is armed. Going to deep sleep mode. Wake by closing door.\n") ;
         delay(100) ;
-        doorClosed = true ;
+        doorClosed  = true ;
+        wifiEnabled = true ;
         deep_sleep_reed_closed() ;
     }
     else {

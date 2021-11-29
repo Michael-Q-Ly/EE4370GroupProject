@@ -11,21 +11,19 @@ gpio_num_t const REED_PIN   = GPIO_NUM_12 ;
 gpio_num_t const LED_PIN    = GPIO_NUM_13 ;
 gpio_num_t const BUTTON     = GPIO_NUM_0 ;
 
-bool wifi_enabled ;
-
-
 /* -------------------------------------------- Constants -------------------------------------------- */
 
 uint8_t const READ_DELAY        = 100 ;
-char const *SSID            = "myNetworkName" ;
-char const *PASS            = "myNetworkPassword" ;
+char const *SSID            = "myNetworkName" ;          // Change!
+char const *PASS            = "myNetworkPassword" ;      // Change!
 // uint8_t const   WEB_PORT    = 80 ;
 uint8_t const MAX_WIFI_ATTEMPTS = 20 ;
 
 /* -------------------------------------------- Flags -------------------------------------------- */
-// bool alarmArmed ;
-RTC_DATA_ATTR bool volatile alarmArmed  = false;
-RTC_DATA_ATTR bool volatile doorClosed  = true ;
+
+RTC_DATA_ATTR bool volatile alarmArmed      = false;            // Store in RTC memory
+RTC_DATA_ATTR bool volatile doorClosed      = true ;
+RTC_DATA_ATTR bool volatile wifiEnabled     = false ;
 
 /* -------------------------------------------- Enumerations -------------------------------------------- */
 
