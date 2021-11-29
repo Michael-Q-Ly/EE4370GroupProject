@@ -5,6 +5,9 @@
 #include <Wifi.h>
 #include <stdint.h>
 
+
+;
+
 void setup() {
     Serial.begin(BAUD_RATE) ;
 
