@@ -3,7 +3,13 @@
 
 #include <Arduino.h>
 
-#define BAUD_RATE       115200
+#define BAUD_RATE           115200
+
+#define SMTP_HOST           "smtp.gmail.com"                                                // SMTP host and port
+#define SMTP_PORT           465
+#define AUTHOR_EMAIL        "YOUR_EMAIL@XXXX.com"                                               // The sign in credentials
+#define AUTHOR_PASSWORD     "YOUR_EMAIL_PASS"
+#define RECIPIENT_EMAIL     "EE4370Group1@Gmail.com"                                        // Recipient's email
 
 /* -------------------------------------------- Pins -------------------------------------------- */
 
