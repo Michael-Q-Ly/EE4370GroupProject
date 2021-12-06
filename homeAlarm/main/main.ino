@@ -1,0 +1,253 @@
+#include "main.h"
+#include <WiFi.h>
+#include <time.h>
+#include <stdint.h>
+
+void setup() {
+    Serial.begin(BAUD_RATE) ;
+
+    pinMode(BUTTON,     INPUT_PULLUP) ;
+    pinMode(REED_PIN,   INPUT_PULLUP) ;
+    pinMode(LED_PIN,    OUTPUT) ;
+
+    wakeUpReason();                                                     //Prints the reason the esp woke from deep sleep
+    Serial.printf("Door state is %d\n", digitalRead(REED_PIN)) ;        //Reads the state of the door from the reed pin
+    delay(100) ;
+    
+
+    if (wifiEnabled) {
+        unsigned long prevMillis = millis();
+        Serial.println("Press the button to disarm the alarm");
+        while((millis() - prevMillis) < 5000 && wifiEnabled) {          //Loops either until the wifi is disabled (by disabling alarm) or 5 seconds have passed. 
+          if(!digitalRead(BUTTON)) {                                    //Polls for if the button has been pressed
+            Serial.println("Disarming alarm");
+            wifiEnabled = false;
+            alarmArmed = false;
+            digitalWrite(LED_PIN, LED_OFF);
+            deep_sleep_button() ;                                       //Goes back into deep sleep, waiting to be armed again. 
+          }
+        }
+        Serial.printf("Wifi on\n") ;
+        init_Wifi() ;
+        Serial.println("\nEmail sent");                                 //Added for simplified testing. Delete and uncomment below line. 
+        //send_email() ;
+
+        wifiEnabled = false ;
+        alarmArmed = false;
+        digitalWrite(LED_PIN, LED_OFF);
+        
+    }
+
+    if ( ! (alarmArmed) )  {
+        deep_sleep_button() ;                                           //Go into deep sleep and await button press
+    }
+    else {
+
+        if (REED_OPEN) {                                                //If the reed is closed, go to sleep and await the "door" to be opened
+            Serial.println("Alarm is armed. Going to deep sleep mode. Wake by opening door.\n") ;
+            delay(100) ;
+            wifiEnabled = true ;
+            digitalWrite(LED_PIN, LED_ON);                              //Turn on the LED because the alarm is armed. The LED turns off once it enters deep sleep... but i thought it was a nice idea. 
+            deep_sleep_reed_open() ;
+        }
+        else {
+            Serial.println("Alarm is armed. Going to deep sleep mode. Wake by closing door.\n") ;
+            delay(100) ;
+            wifiEnabled = true ;
+            digitalWrite(LED_PIN, LED_ON);
+            deep_sleep_reed_closed() ;
+        }
+
+    }
+}
+
+void loop() {
+  //Do nothing, the code should never reach this point. 
+}
+
+/* Connects to WiFi  and shows which IP you are connected to afterwards*/
+void init_Wifi(void) {
+    uint8_t tries;
+    // Set WiFi to station mode and disconnect from an AP if it was previously connected
+    WiFi.mode(WIFI_STA) ;
+    WiFi.disconnect() ;
+    delay(100) ;
+
+    WiFi.begin(SSID, PASS) ;
+    tries = 0 ;
+    while ( (WiFi.status() != WL_CONNECTED) || (++tries < MAX_WIFI_ATTEMPTS) ) {
+        Serial.printf(".") ;
+        delay(1000) ;
+    }
+    Serial.printf("You are now connected to ") ;
+    Serial.println( WiFi.localIP() ) ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* Goes into deep sleep mode and wakes when the reed switch closes */
+void deep_sleep_reed_closed(void) {
+    esp_sleep_enable_ext0_wakeup(REED_PIN, REED_CLOSED) ;                                   // Configures deep sleep wakeup sources (GPIO)
+                                                                                            // then puts the ESP32 into deep sleep mode.
+    esp_deep_sleep_start() ;                                                                // Prints wakeup reason when woken up.
+}
+
+/* Goes into deep sleep mode and wakes when the reed switch opens */
+void deep_sleep_reed_open(void) {
+    esp_sleep_enable_ext0_wakeup(REED_PIN, REED_OPEN) ;                                     // Configures deep sleep wakeup sources (GPIO)
+                                                                                            // then puts the ESP32 into deep sleep mode.
+    esp_deep_sleep_start() ;                                                                // Prints wakeup reason when woken up.
+}
+
+/* Goes into deep sleep mode and wakes when the arming button is pressed */
+void deep_sleep_button(void) {
+    Serial.printf("Alarm state is ") ;
+    Serial.println(alarmArmed) ;
+    Serial.println("Going to deep sleep mode until button press...") ;
+    delay(500) ;                                                                            //500ms delay to ensure the button doesn't get read twice during the disarm part. 
+    alarmArmed = true ;
+    esp_sleep_enable_ext0_wakeup(BUTTON, BUTTON_ON) ;                                       // Configures deep sleep wakeup sources (GPIO)
+                                                                                            // then puts the ESP32 into deep sleep mode.
+    esp_deep_sleep_start() ;                                                                // Prints wakeup reason when woken up.
+    
+}
+
+void wakeUpReason() {
+    esp_sleep_wakeup_cause_t wakeup_reason;
+    wakeup_reason = esp_sleep_get_wakeup_cause();
+    switch(wakeup_reason)
+    {
+        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("\nWakeup caused by external signal using RTC_IO") ;             break ;
+        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("\nWakeup caused by external signal using RTC_CNTL") ;           break ;
+        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("\nWakeup caused by timer") ;                                    break ;
+        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("\nWakeup caused by touchpad") ;                                 break ;
+        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("\nWakeup caused by ULP program") ;                              break ;
+        default                         : Serial.printf("\nWakeup was not caused by deep sleep: %d\n", wakeup_reason) ;   break ;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/* Callback function to get the Email sending status */
+void smtpCallback(SMTP_Status status){
+    /* Print the current status */
+    Serial.println( status.info() ) ;
+
+    /* Print the sending result */
+    if (status.success()) {
+        Serial.println("----------------");
+        ESP_MAIL_PRINTF("Message sent success: %d\n", status.completedCount()) ;
+        ESP_MAIL_PRINTF("Message sent failled: %d\n", status.failedCount()) ;
+        Serial.println("----------------\n");
+        struct tm dt;
+
+        for (size_t i = 0; i < smtp.sendingResult.size(); i++) {
+            /* Get the result item */
+            SMTP_Result result = smtp.sendingResult.getItem(i) ;
+            time_t ts = (time_t)(result.timestamp) ;
+            localtime_r(&ts, &dt) ;
+
+            ESP_MAIL_PRINTF("Message No: %d\n", i + 1) ;
+            ESP_MAIL_PRINTF("Status: %s\n", result.completed ? "success" : "failed") ;
+            ESP_MAIL_PRINTF("Date/Time: %d/%d/%d %d:%d:%d\n", dt.tm_year + 1900, dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec) ;
+            ESP_MAIL_PRINTF("Recipient: %s\n", result.recipients) ;
+            ESP_MAIL_PRINTF("Subject: %s\n", result.subject) ;
+        }
+        Serial.println("----------------\n");
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
+MIT License
+
+Copyright (c) 2021 mobizt
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+Example adapted from: https://github.com/mobizt/ESP-Mail-Client
+*/
+
+/* Send an email using smtp whenever the door closes or opens with the alarm armed */
+void send_email(void) {
+    /* Enable the debug via Serial port none debug or 0 basic debug or 1 */
+    smtp.debug(1);
+
+    /* Set the callback function to get the sending results */
+    smtp.callback(smtpCallback);
+
+    // /* Declare the session config data */
+    // ESP_Mail_Session session;
+
+    /* Set the session config */
+    session.server.host_name    = SMTP_HOST ;
+    session.server.port         = SMTP_PORT ;
+    session.login.email         = AUTHOR_EMAIL ;
+    session.login.password      = AUTHOR_PASSWORD ;
+    session.login.user_domain   = "" ;
+
+    // /* Declare the message class */
+    // SMTP_Message message;
+
+    /* Set the message headers */
+    message.sender.name         = "ESP" ;
+    message.sender.email        = AUTHOR_EMAIL ;
+
+    // message.subject             = "ESP Test Email" ;
+    if (doorClosed) {
+        message.subject         = "Door is closed" ;
+    }
+    else {
+        message.subject         = "Door is Open" ;
+    }
+
+    message.addRecipient("Embedded Student", RECIPIENT_EMAIL) ;
+
+    /* Send HTML message */
+    String htmlMsg              =   "<div style=\"color:#2f4468;\">"
+                                        "<h1>DOOR STATUS</h1>"
+                                            "<p>- Sent from ESP board</p>"
+                                    "</div>" ;
+    message.html.content        = htmlMsg.c_str() ;
+    message.html.content        = htmlMsg.c_str() ;
+    message.text.charSet        = "us-ascii" ;
+    message.html.transfer_encoding = Content_Transfer_Encoding::enc_7bit ;
+
+    #ifdef sendRawText
+        //Send raw text message
+        String textMsg = "Hello World! - Sent from ESP board";
+        message.text.content = textMsg.c_str();
+        message.text.charSet = "us-ascii";
+        message.text.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
+
+        message.priority = esp_mail_smtp_priority::esp_mail_smtp_priority_low;
+        message.response.notify = esp_mail_smtp_notify_success | esp_mail_smtp_notify_failure | esp_mail_smtp_notify_delay;*/
+
+        /* Set the custom message header */
+        message.addHeader("Message-ID: <abcde.fghij@gmail.com>");
+    #endif  /* sendRawText */
+
+    /* Connect to server with the session config */
+    if (!smtp.connect(&session)) {
+        return;
+    }
+
+    /* Start sending Email and close the session */
+    if (!MailClient.sendMail(&smtp, &message)) {
+        Serial.println("Error sending Email, " + smtp.errorReason()) ;
+    }
+}
