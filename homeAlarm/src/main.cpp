@@ -1,8 +1,5 @@
 #include "main.h"
-// #include "reedSwitch.h"
-// #include "button_arm.h"
 #include <Wifi.h>
-// #include <ESP_Mail_Client.h>
 #include <time.h>
 #include <stdint.h>
 
@@ -13,21 +10,14 @@ void setup() {
     pinMode(REED_PIN,   INPUT_PULLUP) ;
     pinMode(LED_PIN,    OUTPUT) ;
 
-    // attachInterrupt(digitalPinToInterrupt(BUTTON), ISR_buttonPressed, RISING) ;
-
     Serial.printf("Door state is %d\n", doorClosed) ;
     delay(100) ;
 
-
-    /* Maybe we can make this an FSM instead? */
 
     if (wifiEnabled) {
         Serial.printf("Wifi on\n") ;
         init_Wifi() ;
 
-        // init_smtp() ;
-        // set_smtp_message() ;
-        // connect_to_smtp_server() ;
         send_email() ;
 
         wifiEnabled = false ;
@@ -75,25 +65,6 @@ void loop() {
     }
     #endif  /* later */
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/* FUNCTION PROTOTYPES */
-
-/* Interrupt service request for button */
-// void IRAM_ATTR ISR_buttonPressed(void) {
-//     portENTER_CRITICAL_ISR(&buttonMUX) ;
-//     buttonInterruptCounter++ ;
-//     // alarmArmed = !alarmArmed ;
-//     portEXIT_CRITICAL_ISR(&buttonMUX) ;
-// }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/* Interrupt service request for button */
-// void IRAM_ATTR ISR_reedOpen(void) {
-//     portENTER_CRITICAL_ISR(&reed.mux) ;
-//     reed.interruptCounter++ ;
-//     portEXIT_CRITICAL_ISR(&reed.mux) ;
-// }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* Connects to WiFi  and shows which IP you are connected to afterwards*/
 void init_Wifi(void) {
@@ -116,20 +87,10 @@ void init_Wifi(void) {
 
 /* Goes into deep sleep mode and wakes when the reed switch closes */
 void deep_sleep_reed_closed(void) {
-    // esp_sleep_enable_ext1_wakeup(0x001000000001, ESP_EXT1_WAKEUP_ANY_HIGH) ;
     esp_sleep_enable_ext0_wakeup(REED_PIN, REED_CLOSED) ;                                   // Configures deep sleep wakeup sources (GPIO)
                                                                                             // then puts the ESP32 into deep sleep mode.
     esp_deep_sleep_start() ;                                                                // Prints wakeup reason when woken up.
-    wakeup_reason = esp_sleep_get_wakeup_cause() ;
-    switch(wakeup_reason)
-    {
-        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("Wakeup caused by external signal using RTC_IO") ;             break ;
-        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("Wakeup caused by external signal using RTC_CNTL") ;           break ;
-        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("Wakeup caused by timer") ;                                    break ;
-        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("Wakeup caused by touchpad") ;                                 break ;
-        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("Wakeup caused by ULP program") ;                              break ;
-        default                         : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason) ;   break ;
-    }
+    wakeUpReason(esp_sleep_get_wakeup_cause());
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -138,16 +99,7 @@ void deep_sleep_reed_open(void) {
     esp_sleep_enable_ext0_wakeup(REED_PIN, REED_OPEN) ;                                     // Configures deep sleep wakeup sources (GPIO)
                                                                                             // then puts the ESP32 into deep sleep mode.
     esp_deep_sleep_start() ;                                                                // Prints wakeup reason when woken up.
-    wakeup_reason = esp_sleep_get_wakeup_cause() ;
-    switch(wakeup_reason)
-    {
-        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("Wakeup caused by external signal using RTC_IO") ;             break ;
-        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("Wakeup caused by external signal using RTC_CNTL") ;           break ;
-        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("Wakeup caused by timer") ;                                    break ;
-        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("Wakeup caused by touchpad") ;                                 break ;
-        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("Wakeup caused by ULP program") ;                              break ;
-        default                         : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason) ;   break ;
-    }
+    wakeUpReason(esp_sleep_get_wakeup_cause());
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -156,7 +108,12 @@ void deep_sleep_button(void) {
     esp_sleep_enable_ext0_wakeup(BUTTON, BUTTON_ON) ;                                       // Configures deep sleep wakeup sources (GPIO)
                                                                                             // then puts the ESP32 into deep sleep mode.
     esp_deep_sleep_start() ;                                                                // Prints wakeup reason when woken up.
-    wakeup_reason = esp_sleep_get_wakeup_cause() ;
+    wakeUpReason(esp_sleep_get_wakeup_cause());
+    
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void wakeUpReason(esp_sleep_wakeup_cause_t wakeup_reason) {
     switch(wakeup_reason)
     {
         case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("Wakeup caused by external signal using RTC_IO") ;             break ;
@@ -167,8 +124,6 @@ void deep_sleep_button(void) {
         default                         : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason) ;   break ;
     }
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /* Callback function to get the Email sending status */
 void smtpCallback(SMTP_Status status){
     /* Print the current status */

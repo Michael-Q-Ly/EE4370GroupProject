@@ -15,7 +15,7 @@
 /* -------------------------------------------- Pins -------------------------------------------- */
 
 gpio_num_t const REED_PIN   = GPIO_NUM_12 ;
-gpio_num_t const LED_PIN    = GPIO_NUM_13 ;
+gpio_num_t const LED_PIN    = GPIO_NUM_16 ;
 gpio_num_t const BUTTON     = GPIO_NUM_0 ;
 
 /* -------------------------------------------- Constants -------------------------------------------- */
@@ -39,10 +39,6 @@ typedef enum {
     REED_OPEN   = HIGH
 } Reed_State_t ;
 
-// typedef enum {                                                                           // Double check if LED is active high or low
-//     LED_ON      = HIGH ,
-//     LED_OFF     = LOW
-// } LED_State_t ;
 
 typedef enum {                                                                              // Switches are active LOW
     BUTTON_ON  = LOW,
@@ -50,27 +46,6 @@ typedef enum {                                                                  
 } Button_State_t ;
 
 /* -------------------------------------------- Structures -------------------------------------------- */
-
-// typedef struct {
-//     uint16_t const              DEBOUNCE    = 500 ;
-//     uint8_t volatile            count ;
-//     portMUX_TYPE                mux         = portMUX_INITIALIZER_UNLOCKED ;
-//     uint32_t volatile           interruptCounter ;
-//     uint32_t                    totalInterruptCounter ;
-// } Button_t ;
-
-// typedef struct {
-//     uint16_t const              DEBOUNCE    = 500 ;
-//     uint8_t volatile            count ;
-//     portMUX_TYPE                mux         = portMUX_INITIALIZER_UNLOCKED ;
-//     uint32_t volatile           interruptCounter ;
-//     uint32_t                    totalInterruptCounter ;
-// } Reed_t ;
-
-/* -------------------------------------------- Typedef Variables -------------------------------------------- */
-// RTC_DATA_ATTR Button_t          button ;
-// Reed_t                          reed ;
-// LED_State_t                     ledState ;
 Reed_State_t                    reedState ;
 esp_sleep_wakeup_cause_t        wakeup_reason ;
 
@@ -85,15 +60,7 @@ SMTP_Message message ;                                                          
 void init_Wifi(void) ;                                                                      // WiFi
 
 void smtpCallback(SMTP_Status status);                                                      // smtp
-// void init_smtp(void) ;
-// void set_smtp_message(void) ;
-// void connect_to_smtp_server(void) ;
 void send_email(void) ;
-
-// void checkReedState(void) ;                                                              // Reed Switch
-
-// void IRAM_ATTR ISR_buttonPressed(void) ;                                                 // Interrupt handlers
-// void IRAM_ATTR ISR_reedOpen(void) ;
 
 void deep_sleep_reed_closed(void) ;                                                         // Sleep modes
 void deep_sleep_reed_open(void) ;
