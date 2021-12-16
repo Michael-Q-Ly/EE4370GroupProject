@@ -13,12 +13,8 @@
 
 gpio_num_t const REED_PIN                   = GPIO_NUM_12 ;
 gpio_num_t const LED_PIN                    = GPIO_NUM_13 ;
-gpio_num_t const BUTTON_ARM                 = GPIO_NUM_14 ;
-gpio_num_t const BUTTON_DISARM              = GPIO_NUM_15 ;
-/* -------------------------------------------- Constants -------------------------------------------- */
-
-/* -------------------------------------------- Flags -------------------------------------------- */
-
+gpio_num_t const ARM_PIN                    = GPIO_NUM_14 ;
+gpio_num_t const DISARM_PIN                 = GPIO_NUM_15 ;
 /* -------------------------------------------- Enumerations -------------------------------------------- */
 
 typedef enum {
@@ -26,21 +22,15 @@ typedef enum {
     REED_OPEN   = HIGH
 } Reed_State_t ;
 
-typedef enum {                                                                           // Double check if LED is active high or low
+typedef enum {
     LED_ON      = HIGH ,
     LED_OFF     = LOW
 } LED_State_t ;
 
-typedef enum {                                                                              // Switches are active LOW
+typedef enum {
     BUTTON_ON  = LOW,
     BUTTON_OFF = HIGH    
 } Button_State_t ;
-
-/* -------------------------------------------- Structures -------------------------------------------- */
-
-/* -------------------------------------------- Typedef Variables -------------------------------------------- */
-
-/* -------------------------------------------- Global Variables -------------------------------------------- */
 
 /* -------------------------------------------- Function Prototypes -------------------------------------------- */
 
