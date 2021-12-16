@@ -71,9 +71,6 @@ void send_email(void) {
     /* Set the callback function to get the sending results */
     smtp.callback(smtpCallback);
 
-    // /* Declare the session config data */
-    // ESP_Mail_Session session;
-
     /* Set the session config */
     session.server.host_name    = mySMTP.pSMTP_HOST ;
     session.server.port         = mySMTP.SMTP_PORT ;
@@ -81,14 +78,10 @@ void send_email(void) {
     session.login.password      = mySMTP.pAUTHOR_PASSWORD ;
     session.login.user_domain   = "" ;
 
-    // /* Declare the message class */
-    // SMTP_Message message;
-
     /* Set the message headers */
     message.sender.name         = "ESP" ;
     message.sender.email        = mySMTP.pAUTHOR_EMAIL ;
 
-    // message.subject             = "ESP Test Email" ;
     if ( doorClosed ) {
         message.subject         = "Door is closed" ;
     }
@@ -116,19 +109,19 @@ void send_email(void) {
         message.text.transfer_encoding  = Content_Transfer_Encoding::enc_7bit;
 
         message.priority = esp_mail_smtp_priority::esp_mail_smtp_priority_low;
-        message.response.notify = esp_mail_smtp_notify_success | esp_mail_smtp_notify_failure | esp_mail_smtp_notify_delay;*/
+        message.response.notify = esp_mail_smtp_notify_success | esp_mail_smtp_notify_failure | esp_mail_smtp_notify_delay;
 
         /* Set the custom message header */
         message.addHeader("Message-ID: <abcde.fghij@gmail.com>");
     #endif  /* sendRawText */
 
     /* Connect to server with the session config */
-    if (!smtp.connect(&session)) {
-        return;
+    if ( !smtp.connect(&session) ) {
+        return ;
     }
 
     /* Start sending Email and close the session */
-    if (!MailClient.sendMail(&smtp, &message)) {
-        Serial.println("Error sending Email, " + smtp.errorReason()) ;
+    if ( !MailClient.sendMail(&smtp, &message) ) {
+        Serial.println( "Error sending Email, " + smtp.errorReason() ) ;
     }
 }
