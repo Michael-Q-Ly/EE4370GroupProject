@@ -13,6 +13,7 @@ uint32_t                    current_millis ;
 static void deep_sleep_button(void) ;
 static void deep_sleep_door_closed(void) ;                                                         // Sleep modes
 static void deep_sleep_door_open(void) ;
+static void display_wake_up_reason( esp_sleep_wakeup_cause_t wakeup_reason ) ;
 
 void setup() {
     Serial.begin( BAUD_RATE ) ;
@@ -26,6 +27,8 @@ void setup() {
     bool disarmButtonPressed ;
     bool armButtonPressed ;
     
+    // Check the wakeup reason
+
     // Briefly turn an LED on during set up time
     ledState = LED_ON ;
     digitalWrite( LED_PIN, ledState ) ;
@@ -109,16 +112,9 @@ static void deep_sleep_button(void) {
     esp_sleep_enable_ext0_wakeup(ARM_PIN, BUTTON_ON) ;
     esp_deep_sleep_start() ;
 
+    esp_sleep_wakeup_cause_t wakeup_reason ;
     wakeup_reason = esp_sleep_get_wakeup_cause() ;
-    switch(wakeup_reason)
-    {
-        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("Wakeup caused by external signal using RTC_IO") ;                 break ;
-        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("Wakeup caused by external signal using RTC_CNTL") ;               break ;
-        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("Wakeup caused by timer") ;                                        break ;
-        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("Wakeup caused by touchpad") ;                                     break ;
-        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("Wakeup caused by ULP program") ;                                  break ;
-        default                         : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason) ;       break ;
-    }
+    display_wake_up_reason( wakeup_reason ) ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -127,16 +123,9 @@ static void deep_sleep_door_closed(void) {
     esp_sleep_enable_ext0_wakeup(REED_PIN, REED_CLOSED) ;
     esp_deep_sleep_start() ;
 
+    esp_sleep_wakeup_cause_t wakeup_reason ;
     wakeup_reason = esp_sleep_get_wakeup_cause();
-    switch(wakeup_reason)
-    {
-        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("\nWakeup caused by external signal using RTC_IO") ;               break ;
-        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("\nWakeup caused by external signal using RTC_CNTL") ;             break ;
-        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("\nWakeup caused by timer") ;                                      break ;
-        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("\nWakeup caused by touchpad") ;                                   break ;
-        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("\nWakeup caused by ULP program") ;                                break ;
-        default                         : Serial.printf("\nWakeup was not caused by deep sleep: %d\n", wakeup_reason) ;     break ;
-    }
+    display_wake_up_reason( wakeup_reason ) ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -145,7 +134,13 @@ static void deep_sleep_door_open(void) {
     esp_sleep_enable_ext0_wakeup(REED_PIN, REED_OPEN) ;
     esp_deep_sleep_start() ;
 
+    esp_sleep_wakeup_cause_t wakeup_reason ;
     wakeup_reason = esp_sleep_get_wakeup_cause();
+    display_wake_up_reason( wakeup_reason ) ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+static void display_wake_up_reason( esp_sleep_wakeup_cause_t wakeup_reason ) {
     switch(wakeup_reason)
     {
         case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("\nWakeup caused by external signal using RTC_IO") ;               break ;
