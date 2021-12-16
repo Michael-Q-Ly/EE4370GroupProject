@@ -4,8 +4,9 @@
 #include "my_wifi.h"                     // If you have your own wifi header file
 #include "smtpcredentials.h"            // If you have your own smtp header file
 
-#include <Arduino.h>
 #include <ESP_Mail_Client.h>
+#include <Arduino.h>
+#include <stdint.h>
 
 #define BAUD_RATE                           115200
 
@@ -63,14 +64,6 @@ typedef struct {
     uint32_t                    totalInterruptCounter ;
 } Button_t ;
 
-// typedef struct {
-//     uint16_t const              DEBOUNCE    = 500 ;
-//     uint8_t volatile            count ;
-//     portMUX_TYPE                mux         = portMUX_INITIALIZER_UNLOCKED ;
-//     uint32_t volatile           interruptCounter ;
-//     uint32_t                    totalInterruptCounter ;
-// } Reed_t ;
-
 /* -------------------------------------------- Typedef Variables -------------------------------------------- */
 RTC_DATA_ATTR Button_t          button ;
 Button_State_t                  buttonPressed = BUTTON_OFF ;
@@ -88,13 +81,13 @@ SMTP_Message                    message ;                                       
 
 /* -------------------------------------------- Function Prototypes -------------------------------------------- */
 
-void init_Wifi(void) ;                                                                      // WiFi
+extern void init_Wifi(void) ;                                                                      // WiFi
 
-void smtpCallback(SMTP_Status status);                                                      // smtp
-void send_email(void) ;
+extern void smtpCallback(SMTP_Status status);                                                      // smtp
+extern void send_email(void) ;
 
-void deep_sleep_reed_closed(void) ;                                                         // Sleep modes
-void deep_sleep_reed_open(void) ;
-void deep_sleep_button(void) ;
+extern void deep_sleep_door_closed(void) ;                                                         // Sleep modes
+extern void deep_sleep_door_open(void) ;
+extern void deep_sleep_button(void) ;
 
 #endif  /* MAIN_H_ */

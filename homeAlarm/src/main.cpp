@@ -7,7 +7,9 @@
 #include <time.h>
 #include <stdint.h>
 
-#define mS_2_S_FACTOR    1000
+#define mS_2_S_FACTOR       1000
+#define SET_UP_TIME         3
+
 void setup() {
     Serial.begin(BAUD_RATE) ;
 
@@ -29,7 +31,7 @@ void setup() {
 
     // Have a delay time to set up the alarm and to disarm it.
     Serial.printf("Setting up... Press disarm button to reset.\n") ;
-    while ( millis() - current_millis <= 10 * mS_2_S_FACTOR ) {
+    while ( millis() - current_millis <= SET_UP_TIME * mS_2_S_FACTOR ) {
         disarmButtonPressed = (bool)digitalRead( BUTTON_DISARM ) ;
         armButtonPressed = (bool)digitalRead( BUTTON_ARM ) ;
         if ( disarmButtonPressed != BUTTON_OFF ) {
@@ -102,7 +104,7 @@ void init_Wifi(void) {
     tries = 0 ;
     while ( (++tries < MAX_WIFI_ATTEMPTS) || (WiFi.status() != WL_CONNECTED) ) {
         Serial.printf(".") ;
-        delay(500) ;
+        delay(100) ;
     }
     Serial.printf("You are now connected to ") ;
     Serial.println( WiFi.localIP() ) ;
