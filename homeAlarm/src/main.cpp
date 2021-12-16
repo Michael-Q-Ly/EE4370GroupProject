@@ -10,17 +10,17 @@ esp_sleep_wakeup_cause_t    wakeup_reason ;
 uint32_t                    current_millis ;
 
 /* Function Prototypes */
+static void deep_sleep_button(void) ;
 static void deep_sleep_door_closed(void) ;                                                         // Sleep modes
 static void deep_sleep_door_open(void) ;
-static void deep_sleep_button(void) ;
 
 void setup() {
     Serial.begin( BAUD_RATE ) ;
 
-    pinMode( BUTTON_ARM,     INPUT_PULLUP ) ;
-    pinMode( BUTTON_DISARM,  INPUT_PULLUP ) ;
-    pinMode( REED_PIN,       INPUT_PULLUP ) ;
-    pinMode( LED_PIN,        OUTPUT ) ;
+    pinMode( ARM_PIN,       INPUT_PULLUP ) ;
+    pinMode( DISARM_PIN,    INPUT_PULLUP ) ;
+    pinMode( REED_PIN,      INPUT_PULLUP ) ;
+    pinMode( LED_PIN,       OUTPUT ) ;
     
 
     bool disarmButtonPressed ;
@@ -42,16 +42,15 @@ void setup() {
     while ( millis() - current_millis <= SET_UP_TIME * mS_2_S_FACTOR ) {
         
         // Get the state of each button
-        disarmButtonPressed = ( bool ) digitalRead( BUTTON_DISARM ) ;
-        armButtonPressed    = ( bool ) digitalRead( BUTTON_ARM ) ;
+        disarmButtonPressed = ( bool ) digitalRead( DISARM_PIN ) ;
+        armButtonPressed    = ( bool ) digitalRead( ARM_PIN ) ;
 
         // Go to an armed or disarmed label depending on which button the user presses
         if ( disarmButtonPressed != BUTTON_OFF ) {
             alarmArmed  = false ;
             wifiEnabled = false ;
-            Serial.printf("Going to deep sleep mode...\n") ;
-            Serial.printf( "Alarm state is %s\n", alarmArmed ? "ON" : "OFF" ) ;
-            delay( 200 ) ;
+            Serial.printf( "Disarm button pressed.\n" ) ;
+            delay( 100 ) ;
             goto disarmed ;
         }
         
@@ -72,7 +71,7 @@ void setup() {
     if ( ! ( alarmArmed ) )  {
         ledState = LED_OFF ;
         digitalWrite( LED_PIN, ledState ) ;
-        Serial.println( "Going to deep sleep mode until button press..." ) ;
+        Serial.printf( "Going to deep sleep mode arm button is pressed...\n" ) ;
         delay( 100 ) ;
         alarmArmed = true ;
         deep_sleep_button() ;
@@ -81,20 +80,21 @@ void setup() {
         goto armed ;
     }
     armed:
-        if ( doorClosed ) {
-            Serial.println( "Alarm is armed. Going to deep sleep mode. Wake by opening door.\n" ) ;
-            delay( 100 ) ;
-            doorClosed  = false ;
-            wifiEnabled = true ;
-            deep_sleep_door_open() ;
-        }
-        else {
-            Serial.println( "Alarm is armed. Going to deep sleep mode. Wake by closing door.\n" ) ;
-            delay( 100 ) ;
-            doorClosed  = true ;
-            wifiEnabled = true ;
-            deep_sleep_door_closed() ;
-        }
+    alarmArmed = true ;     // Not redundant ; what if user presses arm right after a reboot? Then we need to set this.
+    if ( doorClosed ) {
+        Serial.printf( "Alarm is armed. Going to deep sleep mode. Wake by opening door.\n" ) ;
+        delay( 100 ) ;
+        doorClosed  = false ;
+        wifiEnabled = true ;
+        deep_sleep_door_open() ;
+    }
+    else {
+        Serial.printf( "Alarm is armed. Going to deep sleep mode. Wake by closing door.\n" ) ;
+        delay( 100 ) ;
+        doorClosed  = true ;
+        wifiEnabled = true ;
+        deep_sleep_door_closed() ;
+    }
 
 }   /* End setup() */
 
@@ -103,6 +103,24 @@ void loop() {
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* FUNCTION PROTOTYPES */
+
+/* Goes into deep sleep mode and wakes when the arming button is pressed */
+static void deep_sleep_button(void) {
+    esp_sleep_enable_ext0_wakeup(ARM_PIN, BUTTON_ON) ;
+    esp_deep_sleep_start() ;
+
+    wakeup_reason = esp_sleep_get_wakeup_cause() ;
+    switch(wakeup_reason)
+    {
+        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("Wakeup caused by external signal using RTC_IO") ;                 break ;
+        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("Wakeup caused by external signal using RTC_CNTL") ;               break ;
+        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("Wakeup caused by timer") ;                                        break ;
+        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("Wakeup caused by touchpad") ;                                     break ;
+        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("Wakeup caused by ULP program") ;                                  break ;
+        default                         : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason) ;       break ;
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /* Goes into deep sleep mode and wakes when the reed switch closes */
 static void deep_sleep_door_closed(void) {
@@ -136,23 +154,5 @@ static void deep_sleep_door_open(void) {
         case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("\nWakeup caused by touchpad") ;                                   break ;
         case ESP_SLEEP_WAKEUP_ULP       : Serial.println("\nWakeup caused by ULP program") ;                                break ;
         default                         : Serial.printf("\nWakeup was not caused by deep sleep: %d\n", wakeup_reason) ;     break ;
-    }
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/* Goes into deep sleep mode and wakes when the arming button is pressed */
-static void deep_sleep_button(void) {
-    esp_sleep_enable_ext0_wakeup(BUTTON_ARM, BUTTON_ON) ;
-    esp_deep_sleep_start() ;
-
-    wakeup_reason = esp_sleep_get_wakeup_cause() ;
-    switch(wakeup_reason)
-    {
-        case ESP_SLEEP_WAKEUP_EXT0      : Serial.println("Wakeup caused by external signal using RTC_IO") ;                 break ;
-        case ESP_SLEEP_WAKEUP_EXT1      : Serial.println("Wakeup caused by external signal using RTC_CNTL") ;               break ;
-        case ESP_SLEEP_WAKEUP_TIMER     : Serial.println("Wakeup caused by timer") ;                                        break ;
-        case ESP_SLEEP_WAKEUP_TOUCHPAD  : Serial.println("Wakeup caused by touchpad") ;                                     break ;
-        case ESP_SLEEP_WAKEUP_ULP       : Serial.println("Wakeup caused by ULP program") ;                                  break ;
-        default                         : Serial.printf("Wakeup was not caused by deep sleep: %d\n", wakeup_reason) ;       break ;
     }
 }
